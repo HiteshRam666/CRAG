@@ -1,6 +1,6 @@
-streamlit==1.55.0
-streamlit-webrtc==0.64.5
+streamlit
+streamlit-webrtc
 requests
 Pillow
 python-dotenv
-audio-recorder-streamlit==0.0.10
+audio-recorder-streamlit
