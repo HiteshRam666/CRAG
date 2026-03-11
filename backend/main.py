@@ -24,6 +24,7 @@ from backend.rag.mongo_cache import (
 from backend.rag.graph import simple_stream_graph, get_graph_stats
 from backend.ingest.pdf_ingest import ingest_pdf
 import os
+import uvicorn
 load_dotenv()
 logging.basicConfig(
     level=logging.INFO,
