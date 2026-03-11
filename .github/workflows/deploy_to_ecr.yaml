@@ -1,0 +1,82 @@
+name: Build and Pust to AWS ECR 
+
+# When this runs
+on:
+  push:
+    branches: ['main']  # When you push to main branch
+  pull_request: 
+    branches: ['main'] # When you create PR to main
+
+# What permissions this workflow has
+permissions:
+  contents: read
+  id-token: write # Needed for AWS authentication
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download your code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      # Step 2: Configure AWS credentials
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      # Step 3: Login to Amazon ECR
+      - name: 🐳 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Step 4: Build and push Backend image
+      - name: 🏗️ Build and push Backend to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: crag-backend
+          IMAGE_TAG: ${{ github.sha }}  # Unique ID for this commit
+        run: |
+          # Navigate to backend folder
+          cd backend
+
+          # Build the Docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          echo "✅ Backend image pushed: $ECR_REGISTRY/$ECR_REPOSITORY"
+
+      # Step 5: Build and push Frontend image
+      - name: 🏗️ Build and push Frontend to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: crag-frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Navigate to frontend folder
+          cd frontend
+
+          # Build the Docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # Push to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          echo "✅ Frontend image pushed: $ECR_REGISTRY/$ECR_REPOSITORY"
+
+      # Step 6: Output the image URLs
+      - name: 📋 Output image details
+        run: |
+          echo "🎉 Images successfully pushed to ECR!"
+          echo "Backend:  ${{ steps.login-ecr.outputs.registry }}/crag-backend:${{ github.sha }}"
+          echo "Frontend: ${{ steps.login-ecr.outputs.registry }}/crag-frontend:${{ github.sha }}"
