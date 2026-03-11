@@ -51,7 +51,6 @@ class MongoDBConnection:
 
     def _connect(self):
         """Establish connection to MongoDB Atlas"""
-        # mongodb_uri = "mongodb+srv://hiteshram321_db_user:UVQ6rratb0zGqlSW@test.yi3hvxz.mongodb.net/?appName=test"
         # mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
         mongodb_uri = os.getenv("MONGODB_URI")
         if not mongodb_uri:
